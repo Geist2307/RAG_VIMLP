@@ -1,0 +1,29 @@
+# Environment
+FinancyPy/
+FinancyPy/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Notebooks (experimentation only — not part of the pipeline)
+notebooks/
+
+# Stale/fake data
+data/financial_report.json
+
+# Vector store (rebuilt on first run)
+vector_store/
+
+# macOS
+.DS_Store
+
+# PyTorch / model artefacts — models are trained offline
+# and committed separately if desired
+*.pt
+*.onnx
+
+# Jupyter
+.ipynb_checkpoints/

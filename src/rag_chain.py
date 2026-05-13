@@ -30,7 +30,8 @@ from .prompt import SYSTEM_PROMPT
 def _docs_to_str(docs) -> str:
     return "\n\n".join(
         f"[Source: {doc.metadata.get('source', 'ECB')} | "
-        f"Period: {doc.metadata.get('publication_date', 'N/A')}]\n{doc.page_content}"
+        f"Speaker: {doc.metadata.get('speaker', 'N/A')} | "
+        f"Date: {doc.metadata.get('date', 'N/A')}]\n{doc.page_content}"
         for doc in docs
     )
 
@@ -38,7 +39,7 @@ def _docs_to_str(docs) -> str:
 def _merge_contexts(doc_str: str, fact_str: str) -> str:
     parts = []
     if doc_str.strip():
-        parts.append("── RETRIEVED DOCUMENTS ──\n" + doc_str)
+        parts.append("── ECB SPEECHES (retrieved) ──\n" + doc_str)
     if fact_str.strip():
         parts.append("── LIVE MODEL & MARKET DATA ──\n" + fact_str)
     return "\n\n".join(parts)

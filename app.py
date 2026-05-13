@@ -10,7 +10,7 @@ from datetime import datetime
 import streamlit as st
 import markdown
 
-from src.document_loader import FinancialDocumentLoader
+from src.document_loader import ECBSpeechLoader
 from src.rag_chain import FinancialRAGChain
 from src.vector_store import FinancialVectorStore
 from src.query_agent import fetch_and_upsert
@@ -23,10 +23,10 @@ logging.basicConfig(
 logger = logging.getLogger("financial_rag")
 
 VECTOR_STORE_DIR = "vector_store"
-DATA_PATH        = "data/ecb_reports.json"
+DATA_PATH        = "data/ecb_speeches.json"
 
 st.set_page_config(
-    page_title="ECB Financial RAG",
+    page_title="ECB Financial RAG Analyst",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -92,7 +92,7 @@ def log_error(e: Exception) -> str:
 
 
 def get_documents():
-    loader = FinancialDocumentLoader(DATA_PATH)
+    loader = ECBSpeechLoader(DATA_PATH)
     return loader.create_documents()
 
 
@@ -269,22 +269,13 @@ def main():
             with st.spinner("Extracting intent and fetching fresh ECB data..."):
                 agent_result = fetch_and_upsert(
                     query,
-                    st.session_state.vector_store,
-                    save_path=VECTOR_STORE_DIR,
                     forecast_days=forecast_days,
                 )
 
-            added   = agent_result["added"]
             reports = agent_result["reports"]
 
-            if added > 0:
-                st.markdown(
-                    f'<div class="status-card success">✓ Fetched fresh ECB data — '
-                    f'{added} new series added to vector store.</div>',
-                    unsafe_allow_html=True
-                )
-            else:
-                st.markdown(
+       
+            st.markdown(
                     f'<div class="status-card info">ℹ Vector store up to date.</div>',
                     unsafe_allow_html=True
                 )

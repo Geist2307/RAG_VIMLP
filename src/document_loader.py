@@ -2,13 +2,22 @@ import json
 from typing import Dict, List
 from langchain_core.documents import Document
 
-class FinancialDocumentLoader:
+class ECBSpeechLoader:
+
+    """
+    A class to handle ECB speeches downloaded from the ECB API.
+    Speeches are already in json format.
+
+    Handles loading, create list, and stores metadata
+    
+    """
+
     def __init__(self, data_path: str):
         self.data_path = data_path
         self.reports = []
 
     def load_reports(self) -> List[Dict]:
-        """Load financial reports from json file.
+        """Load ECB speeches from json file.
         """
         # we first load the reports and raise errors if not found
         try:
@@ -25,13 +34,10 @@ class FinancialDocumentLoader:
 
 
     def create_documents(self) -> List[Document]:
-        """Convert financial reports to LangChain documents.
+        """Convert ECB  reports to LangChain documents.
         Document content and metadata  contain:
-        1. title
-        2. publication_date 
-        3. author
-        4. category
-        5. summary
+        1. speech content
+        2. metadata : date, speakers, subtitle, source
         """
 
         #check if report have been loaded
@@ -49,31 +55,21 @@ class FinancialDocumentLoader:
             # the structures are simillar so we overspecificy the type of report
             content = f"""
 
-Title: {report["title"]} 
-Category: {report['category']}
-Publication Date: {report['publication_date']}
-Author: {report['author']}
+Title: {report["metadata"]["title"]} 
+Speaker: {report["metadata"]['speaker']}
+Publication Date: {report["metadata"]['date']}
+Source: {report["metadata"]['source']}
 
-Summary:
-{report['summary']}
-
-Last 5 days for report  for {report['title']}:
-{chr(10).join(f"  - {stat}" for stat in report['key_statistics'])}
+Content:
+{report['page_content']}
 """
 
 
 
             # we keep metadata separate for filtering and citation
-            metadata = {
+            metadata = report["metadata"] 
 
-                "report_id": report["reportId"],
-                "title": report["title"],
-                "publication_date" : report["publication_date"],
-                "author" : report["author"]
-
-
-            }
-
+            
             # we need to append the documents
             documents.append(Document(page_content=content, metadata=metadata))
 

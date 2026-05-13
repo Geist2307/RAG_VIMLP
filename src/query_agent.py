@@ -17,7 +17,6 @@ from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 
 from .BayesMolchanov import load_and_predict
-from .vector_store import FinancialVectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,7 @@ class ECBQueryIntent(BaseModel):
 
 # ---- intent extractor ----
 
-_llm            = ChatOpenAI(model="gpt-5.5", temperature=0)
+_llm  = ChatOpenAI(model="gpt-5.5", temperature=0)
 _structured_llm = _llm.with_structured_output(ECBQueryIntent)
 
 _prompt = ChatPromptTemplate.from_messages([
@@ -201,53 +200,17 @@ def _build_report(data: dict, report_id: str, category: str,
         return None
 
 
-# ---- document builder ----
-
-def _report_to_document(report: dict) -> Document:
-    trend      = report.get("trend", {})
-    model_info = report.get("model_info", {})
-    content = (
-        f"Title: {report['title']}\n"
-        f"Category: {report['category']}\n"
-        f"Currency pair: {report['currency_pair']}\n"
-        f"Latest value: {report['latest_value']} for {report['latest_period']}\n"
-        f"Summary: {report['summary']}\n"
-        f"Model architecture: [1 → {model_info.get('hidden', 64)} → 1] "
-        f"activation={model_info.get('activation', 'sin')}\n"
-        f"Training: {model_info.get('warmup_epochs', 150)} warmup + "
-        f"{model_info.get('anneal_epochs', 150)} anneal epochs\n"
-        f"Learning rates: lr_warmup={model_info.get('lr_warmup', 0.1)} "
-        f"lr_anneal={model_info.get('lr_anneal', 0.01)}\n"
-        f"Final ELBO loss: {model_info.get('final_loss', 'N/A')}\n"
-        f"Trained on N obs: {model_info.get('n_obs', 'N/A')}\n"
-        f"Model trained on date: {trend.get('trained_on', 'N/A')}\n"
-        f"Forecast horizon: {trend.get('n_future', 30)} days\n"
-        f"Posterior samples: {trend.get('n_samples', 200)}\n"
-        f"Key statistics (last 5 days):\n"
-        + "\n".join(report.get("key_statistics", []))
-    )
-    return Document(
-        page_content=content,
-        metadata={
-            "report_id":        report["reportId"],
-            "title":            report["title"],
-            "category":         report["category"],
-            "publication_date": report["publication_date"],
-            "author":           report["author"],
-            "source":           "ECB Data API",
-        },
-    )
 
 
 # ---- public entry point ----
 
+# CHANGE signature
 def fetch_and_upsert(query: str,
-                     vector_store: FinancialVectorStore,
-                     save_path: str = VECTOR_STORE_DIR,
                      forecast_days: int = 30) -> dict:
     """
-    Extract intent → fetch ECB data → load pretrained Bayesian MLP
-    → upsert vector store. Reports always returned for chart rendering.
+    Extract intent → fetch ECB data → load pretrained Bayesian MLP.
+    Reports are returned for chart rendering and RAG context.
+    Vector store is NOT updated — it holds ECB speeches, managed separately.
     """
     intent  = extract_intent(query)
     reports = []
@@ -263,12 +226,7 @@ def fetch_and_upsert(query: str,
             continue
         reports.append(report)
 
-    documents    = [_report_to_document(r) for r in reports]
-    upsert_stats = vector_store.upsert_documents(documents, save_path=save_path)
-
     return {
         "intent":  intent,
-        "added":   upsert_stats["added"],
-        "skipped": upsert_stats["skipped"],
         "reports": reports,
     }

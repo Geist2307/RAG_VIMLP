@@ -20,10 +20,6 @@ vector_store/
 # macOS
 .DS_Store
 
-# PyTorch / model artefacts — models are trained offline
-# and committed separately if desired
-*.pt
-*.onnx
 
 # Jupyter
 .ipynb_checkpoints/

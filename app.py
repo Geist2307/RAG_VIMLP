@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 
 import streamlit as st
+import markdown
 
 from src.document_loader import FinancialDocumentLoader
 from src.rag_chain import FinancialRAGChain
@@ -197,7 +198,7 @@ if "history" not in st.session_state:
 # ── Main UI ────────────────────────────────────────────────────────────────────
 def main():
 
-    # header
+    # ── header ─────────────────────────────────────────────────────
     st.markdown("""
     <div class="ecb-header">
         <span style="font-size:2rem">📊</span>
@@ -220,7 +221,15 @@ def main():
             max_value=90,
             value=30,
             step=7,
+            key="forecast_slider",
             help="How many days ahead the Bayesian MLP will predict"
+        )
+        style = st.radio(
+            "Response style",
+            options=["balanced", "technical", "non-technical"],
+            index=0,
+            horizontal=True,
+            key="style_radio",
         )
         st.markdown('</div>', unsafe_allow_html=True)
     with ctrl_col2:
@@ -265,35 +274,38 @@ def main():
                     forecast_days=forecast_days,
                 )
 
-            days    = agent_result["intent"].days
             added   = agent_result["added"]
             reports = agent_result["reports"]
 
             if added > 0:
                 st.markdown(
-                    f'<div class="status-card success">✓ Fetched {days} days of data — '
+                    f'<div class="status-card success">✓ Fetched fresh ECB data — '
                     f'{added} new series added to vector store.</div>',
                     unsafe_allow_html=True
                 )
             else:
                 st.markdown(
-                    f'<div class="status-card info">ℹ Fetched {days} days — '
-                    f'vector store up to date.</div>',
+                    f'<div class="status-card info">ℹ Vector store up to date.</div>',
                     unsafe_allow_html=True
                 )
 
-            # 2. RAG query — pass live reports for context
+            # 2. RAG query
             with st.spinner("Retrieving relevant ECB documents..."):
                 relevant_docs = st.session_state.rag_chain.get_relevant_documents(query)
 
             with st.spinner("Generating analysis..."):
-                response = st.session_state.rag_chain.query(query, reports=reports)
+                response = st.session_state.rag_chain.query(
+                    query,
+                    reports=reports,
+                    style=style,
+                )
 
             st.session_state.history.append({
                 "query":    query,
                 "response": response,
                 "docs":     relevant_docs,
                 "reports":  reports,
+                "style":    style,
                 "time":     datetime.now().strftime("%H:%M:%S"),
             })
 
@@ -318,7 +330,8 @@ def main():
 
             # 4. Analysis AFTER chart
             st.markdown("### Analysis")
-            st.markdown(f'<div class="analysis-box">{response}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="analysis-box">{markdown.markdown(response)}</div>', unsafe_allow_html=True)
+
 
             # 5. Source documents
             st.markdown("### Source Documents")
@@ -359,7 +372,7 @@ def main():
                                 use_container_width=True,
                                 key=f"{item['time']}_{report['reportId']}"
                             )
-                st.markdown(f'<div class="analysis-box">{item["response"]}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="analysis-box">{markdown.markdown(item["response"])}</div>', unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

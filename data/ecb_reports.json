@@ -1,23 +1,22 @@
 [
   {
     "reportId": "ECB-FX-001",
-    "title": "US dollar/Euro ECB reference exchange rate \u2014 2026-05-11",
+    "title": "US dollar/Euro ECB reference exchange rate \u2014 2026-05-12",
     "author": "European Central Bank",
-    "publication_date": "2026-05-11",
+    "publication_date": "2026-05-13",
     "category": "Foreign Exchange",
     "currency_pair": "US dollar/Euro",
-    "latest_value": 1.1765,
-    "latest_period": "2026-05-11",
-    "summary": "Daily  USD/EUR spot exchange rate. Latest observation: 1.1765 (US dollar/Euro) for 2026-05-11. ",
+    "latest_value": 1.1738,
+    "latest_period": "2026-05-12",
+    "summary": "Daily  USD/EUR spot exchange rate. Latest observation: 1.1738 (US dollar/Euro) for 2026-05-12. ",
     "key_statistics": [
-      "2026-05-05: 1.1686",
       "2026-05-06: 1.1762",
       "2026-05-07: 1.177",
       "2026-05-08: 1.1761",
-      "2026-05-11: 1.1765"
+      "2026-05-11: 1.1765",
+      "2026-05-12: 1.1738"
     ],
     "values": [
-      1.0562,
       1.0507,
       1.0512,
       1.0492,
@@ -381,28 +380,28 @@
       1.1762,
       1.177,
       1.1761,
-      1.1765
+      1.1765,
+      1.1738
     ]
   },
   {
     "reportId": "ECB-FX-002",
-    "title": "Pound sterling/Euro ECB reference exchange rate \u2014 2026-05-11",
+    "title": "Pound sterling/Euro ECB reference exchange rate \u2014 2026-05-12",
     "author": "European Central Bank",
-    "publication_date": "2026-05-11",
+    "publication_date": "2026-05-13",
     "category": "Foreign Exchange",
     "currency_pair": "UK pound sterling/Euro",
-    "latest_value": 0.8649,
-    "latest_period": "2026-05-11",
-    "summary": "Daily  GBP/EUR spot exchange rate. Latest observation: 0.8649 (UK pound sterling/Euro) for 2026-05-11. ",
+    "latest_value": 0.868,
+    "latest_period": "2026-05-12",
+    "summary": "Daily  GBP/EUR spot exchange rate. Latest observation: 0.868 (UK pound sterling/Euro) for 2026-05-12. ",
     "key_statistics": [
-      "2026-05-05: 0.8634",
       "2026-05-06: 0.8637",
       "2026-05-07: 0.8641",
       "2026-05-08: 0.8641",
-      "2026-05-11: 0.8649"
+      "2026-05-11: 0.8649",
+      "2026-05-12: 0.868"
     ],
     "values": [
-      0.83205,
       0.82898,
       0.83123,
       0.8283,
@@ -766,28 +765,28 @@
       0.8637,
       0.8641,
       0.8641,
-      0.86488
+      0.86488,
+      0.86803
     ]
   },
   {
     "reportId": "ECB-FX-003",
-    "title": "Japanese yen/Euro ECB reference exchange rate \u2014 2026-05-11",
+    "title": "Japanese yen/Euro ECB reference exchange rate \u2014 2026-05-12",
     "author": "European Central Bank",
-    "publication_date": "2026-05-11",
+    "publication_date": "2026-05-13",
     "category": "Foreign Exchange",
     "currency_pair": "Japanese yen/Euro",
-    "latest_value": 184.87,
-    "latest_period": "2026-05-11",
-    "summary": "Daily  JPY/EUR spot exchange rate. Latest observation: 184.87 (Japanese yen/Euro) for 2026-05-11. ",
+    "latest_value": 184.98,
+    "latest_period": "2026-05-12",
+    "summary": "Daily  JPY/EUR spot exchange rate. Latest observation: 184.98 (Japanese yen/Euro) for 2026-05-12. ",
     "key_statistics": [
-      "2026-05-05: 184.42",
       "2026-05-06: 183.74",
       "2026-05-07: 184.07",
       "2026-05-08: 184.37",
-      "2026-05-11: 184.87"
+      "2026-05-11: 184.87",
+      "2026-05-12: 184.98"
     ],
     "values": [
-      158.64,
       157.74,
       157.3,
       158.59,
@@ -1151,28 +1150,28 @@
       183.74,
       184.07,
       184.37,
-      184.87
+      184.87,
+      184.98
     ]
   },
   {
     "reportId": "ECB-FX-004",
-    "title": "Swiss franc/Euro ECB reference exchange rate \u2014 2026-05-11",
+    "title": "Swiss franc/Euro ECB reference exchange rate \u2014 2026-05-12",
     "author": "European Central Bank",
-    "publication_date": "2026-05-11",
+    "publication_date": "2026-05-13",
     "category": "Foreign Exchange",
     "currency_pair": "Swiss franc/Euro",
-    "latest_value": 0.9163,
-    "latest_period": "2026-05-11",
-    "summary": "Daily  CHF/EUR spot exchange rate. Latest observation: 0.9163 (Swiss franc/Euro) for 2026-05-11. ",
+    "latest_value": 0.9172,
+    "latest_period": "2026-05-12",
+    "summary": "Daily  CHF/EUR spot exchange rate. Latest observation: 0.9172 (Swiss franc/Euro) for 2026-05-12. ",
     "key_statistics": [
-      "2026-05-05: 0.9165",
       "2026-05-06: 0.9165",
       "2026-05-07: 0.9157",
       "2026-05-08: 0.9156",
-      "2026-05-11: 0.9163"
+      "2026-05-11: 0.9163",
+      "2026-05-12: 0.9172"
     ],
     "values": [
-      0.9309,
       0.9316,
       0.9309,
       0.9305,
@@ -1536,7 +1535,8 @@
       0.9165,
       0.9157,
       0.9156,
-      0.9163
+      0.9163,
+      0.9172
     ]
   }
 ]

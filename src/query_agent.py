@@ -44,19 +44,12 @@ class ECBQueryIntent(BaseModel):
 
     series_ids: List[str] = Field(
         description=(
-            "List of ECB report IDs relevant to the query. "
+            "List of ECB report IDs contained in the DB. "
             f"Choose from:\n{SERIES_DESCRIPTIONS}\n"
             "Return all IDs if the query is general or ambiguous."
         )
     )
-    days: int = Field(
-        ge=30,
-        le=700,
-        description=(
-            "Number of days of history to fetch. "
-            "Use 365 for a full year if unclear, 30 for last month."
-        ),
-    )
+  
 
 
 # ---- intent extractor ----
@@ -69,7 +62,7 @@ _prompt = ChatPromptTemplate.from_messages([
         "system",
         "You are a financial data assistant. "
         "Given a user query about ECB exchange rates, "
-        "identify which series are relevant and how many days of history are needed.",
+        "identify which series are relevant.",
     ),
     ("human", "{query}"),
 ])
@@ -83,11 +76,11 @@ def extract_intent(query: str) -> ECBQueryIntent:
         intent.series_ids = [s for s in intent.series_ids if s in SERIES_REGISTRY]
         if not intent.series_ids:
             intent.series_ids = list(SERIES_REGISTRY.keys())
-        logger.info(f"Intent: series={intent.series_ids}, days={intent.days}")
+        logger.info(f"Intent: series={intent.series_ids}")
         return intent
     except Exception as e:
         logger.warning(f"Intent extraction failed ({e}), using defaults.")
-        return ECBQueryIntent(series_ids=list(SERIES_REGISTRY.keys()), days=365)
+        return ECBQueryIntent(series_ids=list(SERIES_REGISTRY.keys()))
 
 
 # ---- ECB fetch ----
@@ -147,6 +140,14 @@ def _build_report(data: dict, report_id: str, category: str,
         latest_value  = values[-1]
         latest_period = all_periods[-1]
 
+        # build full date label list: observed + future
+        last_date        = datetime.strptime(all_periods[-1], "%Y-%m-%d")
+        future_dates     = [
+            (last_date + timedelta(days=i + 1)).strftime("%Y-%m-%d")
+            for i in range(forecast_days)
+        ]
+        full_date_labels = all_periods + future_dates
+
         # load pretrained model and run inference
         trend_stats = load_and_predict(
             series_id=report_id,
@@ -155,13 +156,7 @@ def _build_report(data: dict, report_id: str, category: str,
             registry_path=REGISTRY_PATH,
         )
 
-        # build full date label list: observed + future
-        last_date        = datetime.strptime(all_periods[-1], "%Y-%m-%d")
-        future_dates     = [
-            (last_date + timedelta(days=i + 1)).strftime("%Y-%m-%d")
-            for i in range(forecast_days)
-        ]
-        full_date_labels = all_periods + future_dates
+        trend_stats["date_labels"] = full_date_labels 
 
         # load model metadata from registry for RAG context
         with open(REGISTRY_PATH) as f:

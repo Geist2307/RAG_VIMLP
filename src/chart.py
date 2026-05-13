@@ -11,6 +11,7 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Optional
 
+
 # dark theme — matches app.py
 DARK_BG  = "#0d1117"
 PANEL_BG = "#161b22"
@@ -49,7 +50,7 @@ def build_trend_chart(report: dict) -> Optional[go.Figure]:
 
     last_obs_idx = trend.get("last_obs_idx", len(x_obs) - 1)
     n_future     = trend.get("n_future", 30)
-    n_samples    = trend.get("n_samples", 200)
+    n_samples    = trend.get("n_samples", 200) # how many times we sample wieght, make a predictions
     trained_on   = trend.get("trained_on", "N/A")
 
     title = report.get("title", "ECB Indicator")
@@ -98,7 +99,7 @@ def build_trend_chart(report: dict) -> Optional[go.Figure]:
         hovertemplate="<b>%{x}</b><br>observed: %{y:.4f}<extra></extra>",
     ))
 
-    # ── dashed forecast section ────────────────────────────────
+    # dashed forecast section 
     fig.add_trace(go.Scatter(
         x=x_grid_labels[split:],
         y=y_mean[split:].tolist(),
@@ -108,7 +109,7 @@ def build_trend_chart(report: dict) -> Optional[go.Figure]:
         hovertemplate="<b>%{x}</b><br>forecast: %{y:.4f}<extra></extra>",
     ))
 
-    # ── forecast start vertical line ──────────────────────────
+    # forecast start vertical line 
     fig.add_trace(go.Scatter(
         x=[x_grid_labels[split], x_grid_labels[split]],
         y=[float(np.min(y_mean - y_std)), float(np.max(y_mean + y_std))],
@@ -118,7 +119,7 @@ def build_trend_chart(report: dict) -> Optional[go.Figure]:
         hoverinfo="skip",
     ))
 
-    # ── sample count annotation ───────────────────────────────
+    #sample count annotation 
     fig.add_annotation(
         xref="paper", yref="paper",
         x=1.0, y=1.02,
@@ -162,7 +163,7 @@ def build_trend_chart(report: dict) -> Optional[go.Figure]:
             font=dict(size=11),
             orientation="h",
             yanchor="bottom",
-            y=-0.32,
+            y=-0.5,
             xanchor="left",
             x=0,
         ),

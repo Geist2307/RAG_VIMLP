@@ -2,9 +2,8 @@
 src/BayesMolchanov.py
 ----------------------
 Variational Dropout MLP (Molchanov et al. 2017) with PyTorch autograd.
-Replaces finite-difference gradients with proper backpropagation.
 
-Public API (unchanged):
+Public API:
     VariationalDropoutMolchanov
     VarMLP
     make_mlp
@@ -19,11 +18,11 @@ import torch
 import torch.nn as nn
 from scipy.special import expit
 
-# ── Molchanov constants ────────────────────────────────────────────────────────
+# Molchanov constants (Molchanov et al. 2017)
 K1, K2, K3 = 0.63576, 1.87320, 1.48695
 
 
-# ── Variational layer ──────────────────────────────────────────────────────────
+# Variational layer
 
 class VariationalDropoutMolchanov(nn.Module):
     """
@@ -48,7 +47,7 @@ class VariationalDropoutMolchanov(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Stochastic forward pass via reparameterisation trick."""
+        """Stochastic forward pass via reparameterisation trick from Molchanov et al."""
         ε = torch.randn_like(self.theta)
         W = self.theta + torch.exp(0.5 * self.logσ2) * ε
         return W @ x + self.bias.unsqueeze(-1) if x.dim() == 2 else W @ x + self.bias
@@ -63,12 +62,14 @@ class VariationalDropoutMolchanov(nn.Module):
         )
         return -neg_kl.sum()
 
+    
+    # notice this is a magic number, we keep sparisity at log alpha 3
     def sparsity(self, threshold: float = 3.0) -> float:
         log_alpha = self.logσ2 - 2.0 * torch.log(torch.abs(self.theta) + 1e-8)
         return float((log_alpha >= threshold).float().mean())
 
 
-# ── VarMLP ─────────────────────────────────────────────────────────────────────
+# VarMLP 
 
 class VarMLP(nn.Module):
     """
@@ -104,7 +105,7 @@ def make_mlp(hidden: int = 64) -> VarMLP:
     return VarMLP(layers=[l1, l2], activations=[torch.sin, None])
 
 
-# ── Loss ───────────────────────────────────────────────────────────────────────
+#Loss is variational loss, Kl divergence acts as a regularisation term
 
 def energy_loss(model: VarMLP, x: torch.Tensor, y: torch.Tensor,
                 kl_scale: float = 1.0) -> torch.Tensor:
@@ -114,7 +115,7 @@ def energy_loss(model: VarMLP, x: torch.Tensor, y: torch.Tensor,
     return nll + kl_scale * model.kl() / N
 
 
-# ── Training with warmup + annealing ──────────────────────────────────────────
+# Training with warmup + annealing 
 
 def train_mlp(model: VarMLP,
               x: np.ndarray,
@@ -138,12 +139,12 @@ def train_mlp(model: VarMLP,
     # two param groups so we can switch lr mid-training
     optimiser = torch.optim.Adam(model.parameters(), lr=lr_warmup)
 
-    losses      = []
+    losses = []
     lr_switched = False
 
     for epoch in range(warmup_epochs + anneal_epochs):
 
-        # ── schedule ──────────────────────────────────────────────────
+        #  schedule 
         if epoch < warmup_epochs:
             kl_scale = 0.0
         else:
@@ -156,7 +157,7 @@ def train_mlp(model: VarMLP,
                     pg["lr"] = lr_anneal
                 lr_switched = True
 
-        # ── forward + backward ────────────────────────────────────────
+        #  forward + backward 
         optimiser.zero_grad()
         loss = energy_loss(model, x_t, y_t, kl_scale=kl_scale)
         loss.backward()
@@ -167,7 +168,7 @@ def train_mlp(model: VarMLP,
     return losses
 
 
-# ── Posterior predictive ───────────────────────────────────────────────────────
+# Posterior predictive
 
 def posterior_predictive(model: VarMLP,
                          x_grid: np.ndarray,
@@ -199,7 +200,7 @@ def load_and_predict(series_id: str,
     """
     Load a pretrained VarMLP from the model registry and run
     posterior predictive inference on observed + future time points.
-    No training happens here.
+    No training happens here, just inference.
     """
     import json, torch
 

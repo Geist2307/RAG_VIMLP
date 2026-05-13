@@ -31,7 +31,6 @@ def transform_to_report_schema(data, report_id, category, description, last_n=36
                   if title_attr and title_attr["values"]
                   else "ECB Economic Indicator")
 
-    # --- collect ordered values ---
 # collect values
     values = []
     all_periods = []

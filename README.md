@@ -10,8 +10,15 @@ This project implements a full RAG pipeline over ECB foreign exchange data, enab
 
 **Example queries:**
 - *"What is the current USD/EUR exchange rate?"*
-- *"How has the pound sterling performed against the Euro recently?"*
-- *"Show me the CHF/EUR forecast for the next 30 days."*
+- *"Show me the GBP/EUR forecast for the next 30 days."*
+- *"Give me a technical analysis of the JPY/EUR Bayesian model."*
+- *"What does the CHF/EUR posterior predictive show for the next two weeks?"*
+
+**Not currently supported:**
+- Comparing multiple currency pairs in a single query
+- Macro or fundamental analysis ("why is EUR strengthening?")
+- Investment advice
+- Currency pairs beyond USD, GBP, JPY, CHF vs EUR
 
 ---
 
@@ -24,8 +31,7 @@ Currently, only 4 exchange rates are retrieved via the ECB API:
 3. JPY/EUR
 4. CHF/EUR
 
-Custom Variational(Bayesian) MLP models were trained offline and have been saved with the same unique identifier as the extracted datasets. Based on the query the agent selects the relevant models, and a forecast + uncertainty margin is presented as
-a visualisation. The unique advantage of the bayesian model is its probabilisistic weights, which allow naturally to derive confidence intervals. 
+Custom Variational(Bayesian) MLP models were trained offline and have been saved with the same unique identifier as the extracted datasets. Based on the query the agent selects the relevant models, and a forecast + uncertainty margin is presented asa visualisation. The unique advantage of the bayesian model is its probabilisistic weights, which allow naturally to derive confidence intervals. 
 
 ## Architecture
 
@@ -59,11 +65,11 @@ a visualisation. The unique advantage of the bayesian model is its probabilisist
 
 ### Component breakdown
 
-**`get_data.py`** fetches daily ECB FX reference rates via the ECB SDMX API for the last 365 trading days. Data is stored in `data/ecb_reports.json` and used to bootstrap the vector store. No modelling happens here — this is pure data extraction.
+**`get_data.py`** fetches daily ECB FX reference rates via the ECB SDMX API for the last 365 trading days. Data is stored in `data/ecb_reports.json` and used to bootstrap the vector store. No modelling happens here — this is pure data extraction via an API.
 
-**`BayesMolchanov.py`** implements the Variational Dropout MLP from Molchanov et al. (2017) using PyTorch autograd. The architecture is `[1 → 64 → 1]` with a `sin` hidden activation. Models are **trained offline** (see `notebooks/`) and saved as `.pt` files with a `models/registry.json` index. At query time, `load_and_predict` loads the pretrained weights and runs 200 stochastic forward passes to produce a posterior predictive mean and uncertainty band — no training happens in the app.
+**`BayesMolchanov.py`** implements the Variational Dropout MLP from Molchanov et al. (2017) using PyTorch autograd. The architecture is `[1 → 64 → 1]` with a `sin` hidden activation. Models are **trained offline** (see `notebooks/`) and saved as `.pt` files with a `models/registry.json` index. At query time, `load_and_predict` loads the pretrained weights and runs 200 stochastic forward passes to produce a posterior predictive mean and uncertainty band — no training happens in the app. 
 
-**`query_agent.py`** orchestrates the query pipeline: extracts intent via a single GPT-5.5 structured output call (Pydantic schema), fetches fresh ECB data, loads the correct pretrained model, and upserts new documents into the vector store. The agent always fetches 365 days to match the model's training window, regardless of the display window chosen by the user.
+**`query_agent.py`** orchestrates the query pipeline: extracts intent via a single GPT-5.5 structured output call (Pydantic schema), fetches fresh ECB data, loads the correct pretrained model, and upserts new documents into the vector store. The agent always fetches 365 days to match the model's training window. 
 
 **`FinancialVectorStore`** wraps FAISS with OpenAI's `text-embedding-3-small` model (1536 dimensions). The store is persisted to disk on first run and updated incrementally via `upsert_documents`.
 
@@ -173,9 +179,6 @@ This writes to `data/ecb_reports.json` and bootstraps the vector store on first 
 
 Pretrained model weights are stored in `models/`. They were trained offline on 365 days of daily ECB FX data using the notebooks in `notebooks/` (not included in this repository). The `models/registry.json` file contains architecture parameters and normalisation constants required for inference.
 
-If you want to retrain:
-1. Open `notebooks/` and run the training notebook
-2. Use `save_model()` to write weights and update `registry.json`
 
 ### Run
 
@@ -216,7 +219,7 @@ On first run the vector store is built from `data/ecb_reports.json` and saved to
 
 ## Limitations
 
-- **Models are trained offline.** The app does not retrain models at query time. If ECB rates shift significantly beyond the training distribution, prediction quality may degrade. Retraining is a manual step in the notebook.
+- **Models are trained offline.** The app does not retrain models at query time. If ECB rates shift significantly beyond the training distribution, prediction quality may degrade. Retraining should be done separately.
 - **Fixed training window.** Models are trained on exactly 365 days. The app always fetches 365 days to match this window — using fewer days would cause normalisation mismatch.
 - **Four FX pairs only.** Currently covers USD/EUR, GBP/EUR, JPY/EUR, CHF/EUR. Other ECB series (inflation, interest rates) are not modelled.
 - **200 posterior samples.** The uncertainty estimate is based on 200 stochastic forward passes. More samples improve the estimate but increase latency.

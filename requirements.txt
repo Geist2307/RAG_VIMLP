@@ -30,9 +30,9 @@ scipy
 
 # Visualisation
 plotly
+markdown
 
 # Notebook
 jupyter
 
 
-python -m streamlit run app.py

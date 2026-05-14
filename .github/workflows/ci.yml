@@ -9,6 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env: 
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        PYTHONPATH: ${{ github.workspace }}
+        FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+
 
     steps:
       - name: Checkout code
@@ -36,7 +42,4 @@ jobs:
 
       
       - name: Run tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PYTHONPATH: ${{ github.workspace }}
         run: pytest tests/ -v

@@ -4,7 +4,7 @@ from src.rag.document_loader import ECBSpeechLoader
 from src.rag.chain import FinancialRAGChain
 from src.rag.vector_store import FinancialVectorStore
 
-
+@pytest.mark.integration
 class TestFinancialRAGIntegration:
 
     def test_full_pipeline(self, test_environment):
@@ -50,7 +50,7 @@ class TestFinancialRAGIntegration:
 
 
         for style in ["balanced", "technical", "non-technical"]:
-            
+
             response = rag_chain.query(
             "What has the ECB said about digital euro payments?",
             reports=[],

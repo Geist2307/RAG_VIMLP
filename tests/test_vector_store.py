@@ -7,6 +7,7 @@ from src.rag.document_loader import ECBSpeechLoader
 
 load_dotenv()
 
+@pytest.mark.integration
 class TestFinancialVectorStore:
 
 

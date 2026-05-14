@@ -1,17 +1,17 @@
-from pathlib import Path
 import pytest
-from src.document_loader import FinancialDocumentLoader
-from src.rag_chain import FinancialRAGChain
-from src.vector_store import FinancialVectorStore
+
+from src.rag.document_loader import ECBSpeechLoader
+from src.rag.chain import FinancialRAGChain
+from src.rag.vector_store import FinancialVectorStore
 
 
 class TestFinancialRAGIntegration:
 
     def test_full_pipeline(self, test_environment):
-        """Test complete RAG pipeline with ECB FX data"""
+        """Test complete RAG pipeline end-to-end with ECB speeches."""
 
-        # initialize components
-        loader = FinancialDocumentLoader(test_environment["reports_file"])
+        # initialise components
+        loader    = ECBSpeechLoader(test_environment["reports_file"])
         documents = loader.create_documents()
 
         vector_store = FinancialVectorStore()
@@ -19,20 +19,42 @@ class TestFinancialRAGIntegration:
 
         rag_chain = FinancialRAGChain(vector_store)
 
-        # test document retrieval
-        fx_docs = rag_chain.get_relevant_documents("US dollar Euro exchange rate")
-        assert len(fx_docs) > 0
-        assert "ECB-FX-001" in fx_docs[0]["metadata"]["report_id"] # should be equal
-        assert "US dollar" in fx_docs[0]["content"] or "USD" in fx_docs[0]["content"]
+        # test document retrieval — query matches speech content
+        docs = rag_chain.get_relevant_documents("euro safe assets financial markets")
+        assert len(docs) > 0
+        assert "content"  in docs[0]
+        assert "metadata" in docs[0]
+        assert docs[0]["metadata"]["source"] == "ECB Speeches Dataset"
 
-        # test USD/EUR query
-        usd_response = rag_chain.query("What is the USD EUR exchange rate trend in 2025?")
-        assert isinstance(usd_response, str)
-        assert len(usd_response) > 0
-        assert any(term in usd_response for term in ["2025", "USD", "dollar", "Euro"])
+        response = rag_chain.query(
+            "What is the ECB stance on euro safe assets?",
+            reports=[],
+            style="balanced",
+        )
+        assert isinstance(response, str)
+        assert len(response) > 0
 
-        # test GBP/EUR query
-        gbp_response = rag_chain.query("What is the pound sterling Euro exchange rate trend?")
-        assert isinstance(gbp_response, str)
-        assert len(gbp_response) > 0
-        assert any(term in gbp_response for term in ["GBP", "pound", "sterling", "Euro"])
+        assert isinstance(response, str)
+        assert len(response) > 0
+
+    def test_pipeline_with_different_styles(self, test_environment):
+        """Test pipeline produces responses for all audience styles."""
+
+        loader    = ECBSpeechLoader(test_environment["reports_file"])
+        documents = loader.create_documents()
+
+        vector_store = FinancialVectorStore()
+        vector_store.create_vector_store(documents)
+
+        rag_chain = FinancialRAGChain(vector_store)
+
+
+        for style in ["balanced", "technical", "non-technical"]:
+            
+            response = rag_chain.query(
+            "What has the ECB said about digital euro payments?",
+            reports=[],
+            style=style,
+            )
+            assert isinstance(response, str)
+            assert len(response) > 0

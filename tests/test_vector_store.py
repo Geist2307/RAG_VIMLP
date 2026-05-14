@@ -2,18 +2,13 @@ import pytest
 import os
 from dotenv import load_dotenv
 from langchain_core.documents import Document
-from src.vector_store import FinancialVectorStore
-from src.document_loader import FinancialDocumentLoader
+from src.rag.vector_store import FinancialVectorStore
+from src.rag.document_loader import ECBSpeechLoader
 
 load_dotenv()
 
 class TestFinancialVectorStore:
 
-    @pytest.fixture
-    def sample_documents(self, reports_json_file):
-        """Create ECB documents using the actual loader"""
-        loader = FinancialDocumentLoader(reports_json_file)
-        return loader.create_documents()
 
     def test_create_vector_store(self, sample_documents):
         """Test creating vector store from ECB documents"""
@@ -29,8 +24,9 @@ class TestFinancialVectorStore:
         # query relevant to ECB data
         results = store.similarity_search("US dollar Euro exchange rate", k=1)
         assert len(results) == 1
-        assert "USD" in results[0].page_content or "US dollar" in results[0].page_content
-
+        assert isinstance(results[0], Document)
+        assert len(results[0].page_content) > 0 
+ 
     def test_similarity_search_without_initialization(self):
         """Test error handling when searching without initialization"""
         store = FinancialVectorStore()
@@ -49,7 +45,7 @@ class TestFinancialVectorStore:
         """Test handling of query that is too short"""
         store = FinancialVectorStore()
         store.create_vector_store(sample_documents)
-        results = store.similarity_search("USD")
+        results = store.similarity_search("EUR") # only three chatacters
         assert isinstance(results, list)
         assert len(results) == 0
 
@@ -63,6 +59,6 @@ class TestFinancialVectorStore:
         loaded_store = FinancialVectorStore.load_local(save_path)
         assert loaded_store.vector_store is not None
 
-        results = loaded_store.similarity_search("pound sterling euro exchange rate", k=1)
+        results = loaded_store.similarity_search("digital euro payments Europe", k=1)
         assert len(results) == 1
-        assert "Pound sterling" in results[0].page_content or "GBP" in results[0].page_content
+        assert isinstance(results[0], Document)

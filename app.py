@@ -9,11 +9,12 @@ from datetime import datetime
 
 import streamlit as st
 import markdown
+import json
 
-from src.document_loader import ECBSpeechLoader
-from src.rag_chain import FinancialRAGChain
-from src.vector_store import FinancialVectorStore
-from src.query_agent import fetch_and_upsert
+from src.rag.document_loader import ECBSpeechLoader
+from src.rag.chain import FinancialRAGChain
+from src.rag.vector_store import FinancialVectorStore
+from src.pipeline.orchestrator import fetch_reports
 from src.chart import build_trend_chart
 
 logging.basicConfig(
@@ -144,10 +145,14 @@ def initialize_rag_system():
 
 def render_trend_stats(report: dict):
     trend      = report.get("trend", {})
-    model_info = report.get("model_info", {})
     trained_on = trend.get("trained_on", "N/A")
     n_future   = trend.get("n_future", 30)
     n_samples  = trend.get("n_samples", 200)
+
+    # load model metadata from registry
+    with open("models/registry.json") as f:
+        registry = json.load(f)
+    entry = registry.get(report.get("reportId"), {})
 
     st.markdown(f"""
     <div class="trend-stat">
@@ -164,23 +169,23 @@ def render_trend_stats(report: dict):
     </div>
     <div class="trend-stat">
         <div class="trend-label">Architecture</div>
-        <div class="trend-value">[1 → {model_info.get('hidden', 64)} → 1] · {model_info.get('activation', 'sin')}</div>
+        <div class="trend-value">[1 → {entry.get('hidden', 64)} → 1] · {entry.get('activation', 'sin')}</div>
     </div>
     <div class="trend-stat">
         <div class="trend-label">Training schedule</div>
-        <div class="trend-value">{model_info.get('warmup_epochs', 150)} warmup · {model_info.get('anneal_epochs', 150)} anneal</div>
+        <div class="trend-value">{entry.get('warmup_epochs', 150)} warmup · {entry.get('anneal_epochs', 150)} anneal</div>
     </div>
     <div class="trend-stat">
         <div class="trend-label">Learning rates</div>
-        <div class="trend-value">{model_info.get('lr_warmup', 0.1)} → {model_info.get('lr_anneal', 0.01)}</div>
+        <div class="trend-value">{entry.get('lr_warmup', 0.1)} → {entry.get('lr_anneal', 0.01)}</div>
     </div>
     <div class="trend-stat">
         <div class="trend-label">Final ELBO loss</div>
-        <div class="trend-value">{model_info.get('final_loss', 'N/A')}</div>
+        <div class="trend-value">{entry.get('final_loss', 'N/A')}</div>
     </div>
     <div class="trend-stat">
         <div class="trend-label">Trained on N obs</div>
-        <div class="trend-value">{model_info.get('n_obs', 'N/A')} days</div>
+        <div class="trend-value">{entry.get('n_obs', 'N/A')} days</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -215,6 +220,7 @@ def main():
     ctrl_col1, ctrl_col2 = st.columns([2, 6])
     with ctrl_col1:
         st.markdown('<div class="control-card">', unsafe_allow_html=True)
+    
         forecast_days = st.slider(
             "Forecast horizon (days)",
             min_value=7,
@@ -224,6 +230,7 @@ def main():
             key="forecast_slider",
             help="How many days ahead the Bayesian MLP will predict"
         )
+    
         style = st.radio(
             "Response style",
             options=["balanced", "technical", "non-technical"],
@@ -231,17 +238,20 @@ def main():
             horizontal=True,
             key="style_radio",
         )
-        st.markdown('</div>', unsafe_allow_html=True)
-    with ctrl_col2:
-        st.markdown(
-            '<div class="control-card" style="color:#8b949e; font-size:0.85rem; margin-top:4px">'
-            '🧠 Variational Dropout MLP (Molchanov et al. 2017) · '
-            '200 posterior samples · '
-            'Pre-trained on 365 days of ECB daily FX data · '
-            'Zoom and pan the chart to inspect any window'
-            '</div>',
-            unsafe_allow_html=True
+
+        # load series options from registry
+        with open("models/registry.json") as f:
+            _registry = json.load(f)
+
+        selected_series = st.multiselect(
+            "Select currency pairs",
+            options=list(_registry.keys()),
+            format_func=lambda x: _registry[x].get("description", x),
+            default=["ECB-FX-001"],
+            key="series_selector",
         )
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # ── search bar ─────────────────────────────────────────────────
     col_input, col_btn = st.columns([5, 1])
@@ -265,14 +275,23 @@ def main():
 
     if search and query:
         try:
-            # 1. intent extraction + live fetch + upsert
-            with st.spinner("Extracting intent and fetching fresh ECB data..."):
-                agent_result = fetch_and_upsert(
-                    query,
+            # giard
+            if not selected_series:
+                st.markdown(
+                    '<div class="status-card warning> Please select at least one currency pair </div>',
+                    unsafe_allow_html=True
+                    )
+
+                return 
+            
+            #then fetch 
+            # then fetch
+            with st.spinner("Fetching fresh ECB data and running inference..."):
+                reports = fetch_reports(
+                    series_ids=selected_series,
                     forecast_days=forecast_days,
                 )
 
-            reports = agent_result["reports"]
 
        
             st.markdown(

@@ -22,8 +22,15 @@ from langchain_openai import ChatOpenAI
 from operator import itemgetter
 
 from .vector_store import FinancialVectorStore
-from .trend_enricher import TrendEnricher
+from .enricher import Enricher
 from .prompt import SYSTEM_PROMPT
+
+
+# ========================
+# Model parameters
+LLM = "gpt-5.5"
+TEMPERATURE = 0  # higher it is, more it samples from tails
+# ====================
 
 
 
@@ -61,9 +68,9 @@ class FinancialRAGChain:
 
     def __init__(self, vector_store: FinancialVectorStore):
         self.vector_store   = vector_store
-        self.llm            = ChatOpenAI(model="gpt-5.5", temperature=0)
+        self.llm            = ChatOpenAI(model=LLM, temperature=TEMPERATURE)
         self.chain          = None
-        self.trend_enricher = TrendEnricher()
+        self.trend_enricher = Enricher()
 
     def _get_chain(self):
         if self.chain is None:
@@ -85,7 +92,7 @@ class FinancialRAGChain:
             reports  = inputs.get("reports", [])
             docs     = retriever.invoke(question)
             doc_str  = _docs_to_str(docs)
-            fact_str = trend_enricher(reports)
+            fact_str = trend_enricher(reports) # we get full context from enricher
             return _merge_contexts(doc_str, fact_str)
 
         prompt = ChatPromptTemplate.from_template(SYSTEM_PROMPT)
@@ -114,7 +121,8 @@ class FinancialRAGChain:
             "style": style,
         })
 
-    def get_relevant_documents(self, query: str, k: int = 3) -> List[Dict]:
+    # note : we can increase k for more chunks
+    def get_relevant_documents(self, query: str, k: int = 5) -> List[Dict]:
         self._validate_query(query)
         docs = self.vector_store.similarity_search(query=query, k=k)
         return [

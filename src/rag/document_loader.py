@@ -1,3 +1,12 @@
+"""
+src/document_loader.py
+
+ECBSpeechLoader:
+    load_reports
+    create_documents
+
+"""
+
 import json
 from typing import Dict, List
 from langchain_core.documents import Document
@@ -8,7 +17,7 @@ class ECBSpeechLoader:
     A class to handle ECB speeches downloaded from the ECB API.
     Speeches are already in json format.
 
-    Handles loading, create list, and stores metadata
+    Handles loading from json, create list, and stores metadata
     
     """
 
@@ -63,8 +72,6 @@ Source: {report["metadata"]['source']}
 Content:
 {report['page_content']}
 """
-
-
 
             # we keep metadata separate for filtering and citation
             metadata = report["metadata"] 

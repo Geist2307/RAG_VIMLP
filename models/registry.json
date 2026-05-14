@@ -14,7 +14,11 @@
     "y_mean": 1.1351865530014038,
     "y_std": 0.0496661514043808,
     "trained_on": "2026-05-11",
-    "final_loss": 43.167522
+    "final_loss": 43.167522,
+    "dataset": "EXR",
+    "series_key": "D.USD.EUR.SP00.A",
+    "category": "Foreign Exchange",
+    "description": "Daily USD/EUR spot exchange rate"
   },
   "ECB-FX-002": {
     "model_path": "ECB-FX-002.pt",
@@ -31,7 +35,11 @@
     "y_mean": 0.8579298853874207,
     "y_std": 0.01625899411737919,
     "trained_on": "2026-05-11",
-    "final_loss": 80.317787
+    "final_loss": 80.317787,
+    "dataset": "EXR",
+    "series_key": "D.GBP.EUR.SP00.A",
+    "category": "Foreign Exchange",
+    "description": "Daily GBP/EUR spot exchange rate"
   },
   "ECB-FX-003": {
     "model_path": "ECB-FX-003.pt",
@@ -48,7 +56,11 @@
     "y_mean": 172.2803497314453,
     "y_std": 9.563027381896973,
     "trained_on": "2026-05-11",
-    "final_loss": 23.801241
+    "final_loss": 23.801241,
+    "dataset": "EXR",
+    "series_key": "D.JPY.EUR.SP00.A",
+    "category": "Foreign Exchange",
+    "description": "Daily JPY/EUR spot exchange rate"
   },
   "ECB-FX-004": {
     "model_path": "ECB-FX-004.pt",
@@ -65,6 +77,10 @@
     "y_mean": 172.2803497314453,
     "y_std": 9.563027381896973,
     "trained_on": "2026-05-11",
-    "final_loss": 167.628616
+    "final_loss": 167.628616,
+    "dataset": "EXR",
+    "series_key": "D.CHF.EUR.SP00.A",
+    "category": "Foreign Exchange",
+    "description": "Daily CHF/EUR spot exchange rate"
   }
 }
